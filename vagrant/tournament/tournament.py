@@ -11,8 +11,11 @@ def connect():
     return psycopg2.connect("dbname=tournament")
 
 
+# Function to execute SQL functions
 def executeSql(query):
     """Function to run SQL queries."""
+
+    # Start connection and execute query
     conn = connect()
     c = conn.cursor()
     c.execute(str(query))
@@ -20,27 +23,27 @@ def executeSql(query):
     conn.close()
 
 
-def deleteTournaments():
-    """Remove all the tournament records from the database."""
-    query = "DELETE FROM tournament;"
-    executeSql(query)
-
-
 def deletePlayers():
     """Remove all the player records from the database."""
+
     query = "DELETE FROM player;"
     executeSql(query)
 
 
 def deleteMatches():
     """Remove all the match records from the database."""
+
     query = "DELETE FROM match;"
     executeSql(query)
 
 
 def countPlayers():
     """Returns the number of players currently registered."""
+
+    # Query to count the number of players in the player table
     query = "SELECT COUNT(*) FROM player;"
+
+    # Start connection and execute query
     conn = connect()
     c = conn.cursor()
     c.execute(query)
@@ -61,7 +64,11 @@ def registerPlayer(name):
     Args:
       name: the player's full name (need not be unique).
     """
+
+    # Query to add new player into players table
     query = "INSERT INTO player (name) VALUES (%s);"
+
+    # Start connection and execute query
     conn = connect()
     c = conn.cursor()
     c.execute(query, (name,))
@@ -82,13 +89,19 @@ def playerStandings():
         wins: the number of matches the player has won
         matches: the number of matches the player has played
     """
+
+    # Query to get current standings from standings view
     query = "SELECT * FROM standings;"
+
+    # Start connection and execute query
     conn = connect()
     c = conn.cursor()
     c.execute(query)
     standings = c.fetchall()
     conn.commit()
     conn.close()
+
+    # Return standings from query
     return standings
 
 
@@ -100,12 +113,12 @@ def reportMatch(winner, loser):
       loser:  the id number of the player who lost
     """
 
-    query = "INSERT INTO match (winner, loser) VALUES (%s, %s);"
-    conn = connect()
-    c = conn.cursor()
-    c.execute(query, (winner, loser))
-    conn.commit()
-    conn.close()
+    # Query to add new match with winner and loser
+    query = "INSERT INTO match (winner, loser) VALUES (%s, %s);" % (winner, loser)
+
+    # Execute query
+    executeSql(query)
+
 
 
 def swissPairings():
@@ -124,22 +137,28 @@ def swissPairings():
         name2: the second player's name
     """
 
+    # Query to return all from standings view
     query = "SELECT * FROM standings;"
+
+    # Start connection and execute query
     conn = connect()
     c = conn.cursor()
     c.execute(query)
-    standings = c.fetchall()
+    s = c.fetchall()
     conn.commit()
     conn.close()
-    count = len(standings)
+
+    # Create list to hold pairs
     pairs = []
-    num = 0
-    while (num < count):
-        id1 = standings[num][0]
-        name1 = standings[num][1]
-        id2 = standings[num + 1][0]
-        name2 = standings[num + 1][1]
-        pairs.append((id1, name1, id2, name2))
-        num += 2
+
+    # Set counter for adding items to pairs list
+    i = 0
+
+    # Loop through standings and pair players in order of standings
+    while (i < len(s)):
+        # Add pair containing players ids and names to pairs list
+        pairs.append((s[i][0], s[i][1], s[i + 1][0], s[i + 1][0]))
+        # Increment counter by 2 since two players are in each pair
+        i += 2
 
     return pairs
